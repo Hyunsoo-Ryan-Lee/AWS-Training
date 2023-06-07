@@ -42,8 +42,8 @@ class StepFunctionLambda(Stack):
 
         wait_job = _aws_stepfunctions.Wait(
             self,
-            "Wait 10 Seconds",
-            time=_aws_stepfunctions.WaitTime.duration(Duration.seconds(10)),
+            "Wait 3 Seconds",
+            time=_aws_stepfunctions.WaitTime.duration(Duration.seconds(3)),
         )
 
         status_job = _aws_stepfunctions_tasks.LambdaInvoke(

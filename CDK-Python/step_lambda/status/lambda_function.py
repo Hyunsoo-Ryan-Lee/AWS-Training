@@ -1,9 +1,7 @@
 import json
 
-
 def lambda_handler(event, context):
-    print("Hello from STATUS")
-    return {
-        "statusCode": 200,
-        "body": json.dumps({"message": "Hello from STATUS"}),
-    }
+    if event["STATUS"] == "SUCCEEDED":
+        return {"status": "SUCCEEDED"}
+    else:
+        return {"status": "FAILED"}
