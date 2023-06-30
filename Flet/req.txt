@@ -1,0 +1,5 @@
+flet
+boto3
+awscli
+mysql-connector-python
+sqlalchemy

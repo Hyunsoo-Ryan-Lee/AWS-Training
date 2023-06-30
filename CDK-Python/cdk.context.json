@@ -1,0 +1,12 @@
+{
+  "availability-zones:account=646664498184:region=ap-northeast-2": [
+    "ap-northeast-2a",
+    "ap-northeast-2b",
+    "ap-northeast-2c",
+    "ap-northeast-2d"
+  ],
+  "security-group:account=646664498184:region=ap-northeast-2:securityGroupId=sg-083c7967737299150": {
+    "securityGroupId": "sg-083c7967737299150",
+    "allowAllOutbound": false
+  }
+}

@@ -20,7 +20,7 @@ class StepFunctionLambda(Stack):
             "submitLambda",
             handler="lambda_function.lambda_handler",
             runtime=_lambda.Runtime.PYTHON_3_8,
-            code=_lambda.Code.from_asset("./step_lambda/submit"),
+            code=_lambda.Code.from_asset("./lambda_functions/lambda_stepfunction/submit"),
         )
 
         status_lambda = _lambda.Function(
@@ -28,7 +28,7 @@ class StepFunctionLambda(Stack):
             "statusLambda",
             handler="lambda_function.lambda_handler",
             runtime=_lambda.Runtime.PYTHON_3_8,
-            code=_lambda.Code.from_asset("./step_lambda/status"),
+            code=_lambda.Code.from_asset("./lambda_functions/lambda_stepfunction/status"),
         )
 
         # Step functions Definition

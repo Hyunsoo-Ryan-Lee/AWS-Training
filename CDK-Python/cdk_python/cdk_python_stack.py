@@ -25,7 +25,7 @@ class CdkPythonStack(Stack):
         producer_lambda = aws_lambda.Function(self, "producer_lambda_function",
                                               runtime=aws_lambda.Runtime.PYTHON_3_8,
                                               handler="lambda_function.lambda_handler",
-                                              code=aws_lambda.Code.from_asset("./lambda_functions/producer"))
+                                              code=aws_lambda.Code.from_asset("./lambda_functions/lambda_dynamo/producer"))
 
         producer_lambda.add_environment("TABLE_NAME", demo_table.table_name)
 
@@ -36,7 +36,7 @@ class CdkPythonStack(Stack):
         consumer_lambda = aws_lambda.Function(self, "consumer_lambda_function",
                                               runtime=aws_lambda.Runtime.PYTHON_3_8,
                                               handler="lambda_function.lambda_handler",
-                                              code=aws_lambda.Code.from_asset("./lambda_functions/consumer"))
+                                              code=aws_lambda.Code.from_asset("./lambda_functions/lambda_dynamo/consumer"))
 
         consumer_lambda.add_environment("TABLE_NAME", demo_table.table_name)
 

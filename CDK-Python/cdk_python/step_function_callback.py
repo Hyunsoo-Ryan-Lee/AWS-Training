@@ -17,7 +17,7 @@ class StepFunctionCallBack(Stack):
     def __init__(self, scope: Construct, id: str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
-
+        # 기존에 있던 Queue 정의
         queue = sqs.Queue.from_queue_arn(self, "MyQueue", queue_arn)
         
         callback_lambda = _lambda.Function(
@@ -26,7 +26,7 @@ class StepFunctionCallBack(Stack):
             function_name = "CDK-CallBack",
             handler="lambda_function.lambda_handler",
             runtime=_lambda.Runtime.PYTHON_3_8,
-            code=_lambda.Code.from_asset("./step_lambda/callback"),
+            code=_lambda.Code.from_asset("./lambda_functions/lambda_stepfunction/callback"),
             timeout = Duration.seconds(30)
         )
         # SQS Trigger 연결
