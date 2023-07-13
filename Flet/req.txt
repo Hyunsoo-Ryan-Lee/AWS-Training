@@ -3,3 +3,12 @@ boto3
 awscli
 mysql-connector-python
 sqlalchemy
+Pillow
+
+# flask
+flask_sqlalchemy
+flask
+
+#fastapi
+fastapi
+uvicorn

@@ -1,5 +1,5 @@
 import flet as ft
-import random, subprocess
+import random
 from pytz import timezone
 from datetime import datetime
 from lottery_database import lottoDB
@@ -8,11 +8,13 @@ cursor = lottoDB.cursor()
 tableName = "lotto"
 lottery_number = [str(i).zfill(2) for i  in range(1,46)]
 currentTime = datetime.now(timezone('Asia/Seoul')).strftime('%Y-%m-%d %H:%M:%S')
-day_list = []
+
 def main(page: ft.Page):
     page.title = "Special Lottery Number"
-    page.bgcolor = 'WHITE'
+    page.bgcolor = ft.colors.WHITE30
     page.scroll = "always"
+    page.padding = 20
+    day_list = []
     
     def insertDataToDB():
         try:
@@ -28,7 +30,7 @@ def main(page: ft.Page):
         page.snack_bar = ft.SnackBar(
                 ft.Text(msg, size=17, weight=ft.FontWeight.BOLD),
                 bgcolor=color,
-                duration=2500,
+                duration=2000,
                 )
         page.snack_bar.open = True
         page.update()
@@ -41,6 +43,8 @@ def main(page: ft.Page):
             snackBar("1의 자리와 10의 자리가 바뀐 숫자도 사용됩니다.\n(숫자가 91이면 19로 사용)", 'blue')
         else: pass
 
+    def deleteDayList(day_list):
+        day_list.clear()
 
     def deleteall(e):
         memo.value = ""
@@ -48,7 +52,8 @@ def main(page: ft.Page):
         lotto_memo.value = ""
         check_box1.value = False
         check_box2.value = False
-        globals()['day_list'] = []
+        deleteDayList(day_list)
+        day_list.clear()
         snackBar("모든 데이터가 삭제되었습니다.", 'red')
         page.update()
 
@@ -60,9 +65,8 @@ def main(page: ft.Page):
                 vals = '\n'.join(numbs)
                 memo.value = vals
                 snackBar(f"{number_text.value} 추가되었습니다.", 'green')
-            except Exception as e:
-                print(e)
-                print("error you CODE !!!!")
+            except ValueError:
+                snackBar("문제가 발생하였습니다.", 'red')
         else:
             snackBar("여섯자리 숫자만 입력해주세요.", 'red')
 

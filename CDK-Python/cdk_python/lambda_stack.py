@@ -27,10 +27,7 @@ class LambdaURLStack(Stack):
             role=role,
             runtime=_lambda.Runtime.PYTHON_3_9,
             code=_lambda.Code.from_asset("./lambda_functions/lambda_url"),
-            timeout = Duration.seconds(30)
+            timeout = Duration.seconds(60)
         )
         
         private_lambda.add_function_url(auth_type=_lambda.FunctionUrlAuthType.NONE)
-        
-        # SQS Trigger 연결
-        # private_lambda.add_event_source()
