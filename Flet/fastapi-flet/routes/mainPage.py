@@ -1,7 +1,12 @@
 import flet as ft
 from flet_route import Params, Basket
 import requests
+import uuid
+import json
+from pytz import timezone
+from datetime import datetime
 
+currentTime = datetime.now(timezone('Asia/Seoul')).strftime('%Y-%m-%d %H:%M:%S')
 
 
 def mainPageView(page: ft.Page, params: Params, basket: Basket):
@@ -25,22 +30,41 @@ def mainPageView(page: ft.Page, params: Params, basket: Basket):
         
         else:
             data = {
-                "id": 1,
+                "id": str(uuid.uuid1()),
+                "time": str(currentTime),
                 "name": name,
-                "email": email,
+                "email": email
             }
-
-            res = requests.post("http://127.0.0.1:5000/items/", json=data)
-            if res.status_code == 200:
-                delete_textfield()
-                snackBar("Register Succeed!", "GREEN", 1500)
-                page.update()
-            else:
+            print(data)
+            # res = requests.post("http://127.0.0.1:5000/items/", json=data)
+            # res = requests.post("http://127.0.0.1:5000/dynamo/items/", json=data)
+            res = requests.post("https://2qkgncc2cu3g4rypjspqezm4mq0wbpdc.lambda-url.ap-northeast-2.on.aws/dynamo/items/"
+                                , json=data
+                                , allow_redirects=False)
+            print(res.text)
+            try:
+                if res.status_code == 200:
+                    delete_textfield()
+                    snackBar("Register Succeed!", "GREEN", 1500)
+                    page.update()
+            except Exception as e:
+                print(e)
                 snackBar("Something went wrong!", "RED", 1500)
                 page.update()
             
     def settings_page(e):
         page.go("/settings")
+        
+    def to_lambda(e):
+        data = {
+            "id": uuid.uuid1(),
+            "time": currentTime,
+            "name": "name",
+            "email": "email",
+        }
+        # res = requests.get("https://2qkgncc2cu3g4rypjspqezm4mq0wbpdc.lambda-url.ap-northeast-2.on.aws/", json={})
+        res = requests.post("https://2qkgncc2cu3g4rypjspqezm4mq0wbpdc.lambda-url.ap-northeast-2.on.aws/items/", json={})
+        print(res.text)
     
     name_field = ft.TextField(
         label="name",
@@ -63,7 +87,9 @@ def mainPageView(page: ft.Page, params: Params, basket: Basket):
                            , width=140
                            , height=40
                            , icon_color= "green"
-                           , on_click=lambda e: register_request(e, name_field.value, email_field.value))
+                           , on_click=lambda e: register_request(e, name_field.value, email_field.value)
+                        #    , on_click=lambda e: to_lambda(e)
+                           )
 
     btn2 = ft.FilledButton(content=ft.Text("Register", weight="w700")
                            , width=140

@@ -1,15 +1,9 @@
-FROM amazon/aws-lambda-python:3.8
+FROM public.ecr.aws/lambda/python:3.8
 
-RUN /var/lang/bin/python3.8 -m pip install --upgrade pip
+WORKDIR ${LAMBDA_TASK_ROOT}
 
-RUN yum install git -y
+COPY . ${LAMBDA_TASK_ROOT}
 
-WORKDIR /workspace
+RUN  pip3 install -r requirements.txt --target "${LAMBDA_TASK_ROOT}"
 
-COPY . /workspace
-
-RUN pip install -r requirements.txt
-
-RUN cp lambda_function.py /var/task/
-
-CMD ["lambda_function.handler"]
+CMD [ "app.handler" ]

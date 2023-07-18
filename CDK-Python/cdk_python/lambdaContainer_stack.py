@@ -3,7 +3,8 @@ import typing
 from aws_cdk import (
     aws_lambda,
     aws_ecr,
-    App, Aws, Duration, Stack
+    aws_iam as iam,
+    Aws, Duration, Stack
 )
 from constructs import Construct
 
@@ -18,52 +19,42 @@ class LambdaContainerFunctionStack(Stack):
 
         if (use_pre_existing_image):
 
-            ##
-            ## Container was build previously, or elsewhere.
-            ## Use the pre-existing container
-            ##
             ecr_repository = aws_ecr.Repository.from_repository_attributes(self,
                 id              = "ECR",
                 repository_arn  ='arn:aws:ecr:{0}:{1}'.format(Aws.REGION, Aws.ACCOUNT_ID),
                 repository_name = image_name
             ) ## aws_ecr.Repository.from_repository_attributes
 
-            ##
-            ## Container Image.
-            ## Pulled from the ECR repository.
-            ##
-            # ecr_image is expecting a `Code` type, so casting `EcrImageCode` to `Code` resolves mypy error
             ecr_image = typing.cast("aws_lambda.Code", aws_lambda.EcrImageCode(
-                repository = ecr_repository
+                repository = ecr_repository,
+                tag='latest'
             )) ## aws_lambda.EcrImageCode
 
         else:
-            ##
-            ## Create new Container Image.
-            ##
             ecr_image = aws_lambda.EcrImageCode.from_asset_image(
-                directory = os.path.join(os.getcwd(), "lambda-image")
+                directory = "/home/ubuntu/AWS-Training/CDK-Python/cdk_python/lambda-image",
             )
+        
+        # Lambda 함수의 IAM Role 정의   
+        role_arn = 'arn:aws:iam::646664498184:role/LambdaEC2FullAccessRole'
+        role = iam.Role.from_role_arn(
+                                    self, 
+                                    "Role", 
+                                    role_arn, 
+                                    # mutable=False
+                                    )
 
-
-
-
-        ##
-        ## Lambda Function
-        ##
+        # 람다 함수 부분
         aws_lambda.Function(self,
           id            = "lambdaContainerFunction",
-          description   = "Sample Lambda Container Function",
+          description   = "Lambda Container Function",
+          role          = role,
           code          = ecr_image,
-          ##
-          ## Handler and Runtime must be *FROM_IMAGE*
-          ## when provisioning Lambda from Container.
-          ##
           handler       = aws_lambda.Handler.FROM_IMAGE,
           runtime       = aws_lambda.Runtime.FROM_IMAGE,
           environment   = {"hello":"world"},
-          function_name = "sampleContainerFunction",
+          function_name = "LambdaDockerImage",
           memory_size   = 128,
           reserved_concurrent_executions = 10,
-          timeout       = Duration.seconds(10),
-        ) ## aws_lambda.Function
+          timeout       = Duration.seconds(30)
+        )

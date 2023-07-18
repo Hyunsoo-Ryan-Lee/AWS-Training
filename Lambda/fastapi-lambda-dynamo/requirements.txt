@@ -1,0 +1,4 @@
+FastAPI==0.99.0
+mangum==0.17.0
+pydantic==1.8.2
+boto3

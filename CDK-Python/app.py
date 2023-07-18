@@ -6,7 +6,7 @@ from aws_cdk import App, Environment
 # from cdk_python.step_function_callback import StepFunctionCallBack
 # from cdk_python.lambda_stack import LambdaURLStack
 from cdk_python.lambdaContainer_stack import LambdaContainerFunctionStack
-
+# from cdk_python.container_test import MyConstruct
 
 app = App()
 env_cn = Environment(account="646664498184", region="ap-northeast-2")
