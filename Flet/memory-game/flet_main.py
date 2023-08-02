@@ -257,4 +257,8 @@ def main(page: ft.Page):
     
     page.update()
     
-ft.app(target=main)
+ft.app(target=main
+       , name = ''
+       , view = ft.WEB_BROWSER
+       , port = 2020
+       )

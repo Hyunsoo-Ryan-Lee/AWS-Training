@@ -146,6 +146,6 @@ def main(page: ft.Page):
 
 ft.app(target=main
        , name = ''
-       , view = None
-       , port = 2345
+       , view = ft.WEB_BROWSER
+       , port = 2010
        )

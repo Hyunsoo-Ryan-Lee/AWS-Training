@@ -12,3 +12,6 @@ flask
 #fastapi
 fastapi
 uvicorn
+
+python-dotenv
+ffmpeg-python

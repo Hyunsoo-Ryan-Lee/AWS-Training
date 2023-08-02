@@ -153,9 +153,13 @@ dmypy.json
 cython_debug/
 
 # python 가상환경
-/home/ubuntu/AWS-Training/Flet/flet/
+/home/ubuntu/AWS-Training/Flet/flet
 /home/ubuntu/AWS-Training/ChatGPT/gpt
 /home/ubuntu/AWS-Training/CDK-Python/.venv
 
 #.env 파일
 /home/ubuntu/AWS-Training/ChatGPT/.env
+
+/home/ubuntu/AWS-Training/Flet/photo-uploader/.env
+/home/ubuntu/AWS-Training/Flet/photo-uploader/hyunsoo-files
+/home/ubuntu/AWS-Training/Flet/photo-uploader/upload_log.txt
