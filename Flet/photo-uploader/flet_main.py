@@ -1,14 +1,14 @@
 from typing import Dict
 import flet as ft
-from flet_route import Params, Basket
 import os, time, shutil
 from datetime import datetime, timezone, timedelta
+from time import localtime
 from dotenv import load_dotenv
 from exif_info import get_exif
 from utils import partition_path, upload_image_to_s3, get_size
 
-load_dotenv()
 
+load_dotenv()
 ##### GLOBAL VARIABLES #####
 log_file = os.environ.get('LOGFILE_DIR_NAME')
 upload_path = os.environ.get('UPLOAD_DIR_NAME')
@@ -18,10 +18,10 @@ bucket_name = os.environ.get('S3_BUCKET_NAME')
 def main(page: ft.Page):
     prog_bars: Dict[str, ft.ProgressRing] = {}
     files = ft.Ref[ft.Column]()
+    upload_button = ft.Ref[ft.ElevatedButton]()
     page.title = "Photo Uploader"
     page.bgcolor = ft.colors.WHITE
     page.scroll = "always"
-    upload_button = ft.Ref[ft.ElevatedButton]()
     
     
     def snackBar(msg, color, font_size, dur):
@@ -48,7 +48,10 @@ def main(page: ft.Page):
         prog_bars[e.file_name].value = e.progress
         prog_bars[e.file_name].update()
 
+    file_picker = ft.FilePicker(on_result=file_picker_result, on_upload=on_upload_progress)
+
     def upload_files(e):
+        start = time.time()
         KST = timezone(timedelta(hours=9))
         time_record = datetime.now(KST).strftime('%Y%m%d')
         time_stamp = datetime.now(KST).strftime('%Y-%m-%d %H:%M:%S')
@@ -78,7 +81,9 @@ def main(page: ft.Page):
         # File Upload 확인 후 Meta 추출 및 datetime에 따른 partition 생성 후 S3 Upload
         for i, file in enumerate(os.listdir(upload_path)):
             exif_data = get_exif(file)
-            s3_subdir = 'video' if exif_data.get('type', '') == 'video' else 'photos'
+            print(exif_data)
+            # print(exif_data.get('DateTime', ''), exif_data.get('type', 'noType'))
+            s3_subdir = exif_data.get('type', 'noType')
             _datetime = exif_data.get('DateTime', '')
             _datetime = _datetime.replace(' ', '')
             if _datetime:
@@ -94,7 +99,8 @@ def main(page: ft.Page):
         log_txt += "\n"
         with open(log_file, 'a') as file:
             file.write(log_txt)
-            
+        
+        tot = localtime(time.time()-start)
         time.sleep(1)
         snackBar(
                 f"{total_file_count} files Have been Successfully uploaded to AWS Cloud"
@@ -105,14 +111,18 @@ def main(page: ft.Page):
         # S3 Upload 후 디렉토리 비움
         init_page()
         open_dlg()
-        test.value = f"\tUPLOADED FILE COUNT : {total_file_count}\n\tUPLOADED FILE SIZE : {total_file_size}"
-        files.current.controls.insert(1, test)
+        upload_info_text.value = f"""
+        \tUPLOADED FILE COUNT : {total_file_count}\n
+        \tUPLOADED FILE SIZE : {total_file_size}\n
+        \tUPLOADED TIME : {tot.tm_min} 분 {tot.tm_sec} 초
+        """
+        files.current.controls.insert(1, upload_info_text)
         page.update()
         time.sleep(4)
         shutil.rmtree(upload_path)
         os.makedirs(upload_path)
     
-    test=ft.Text(f"", size=16, weight=ft.FontWeight.BOLD)
+    upload_info_text=ft.Text(f"", size=16, weight=ft.FontWeight.BOLD)
     
     dlg = ft.AlertDialog(
         title=ft.Text(f"UPLOAD COMPLETE", size=17, weight=ft.FontWeight.BOLD)
@@ -205,10 +215,6 @@ def main(page: ft.Page):
         on_dismiss=lambda e: print("Modal dialog dismissed!"),
     )        
 
-        
-    file_picker = ft.FilePicker(on_result=file_picker_result, on_upload=on_upload_progress)
-
-    # hide dialog in a overlay
     page.overlay.append(file_picker)
 
     page.add(
