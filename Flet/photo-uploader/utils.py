@@ -11,11 +11,17 @@ def upload_image_to_s3(file_path, bucket_name, key):
         s3.upload_file(file_path, bucket_name, key)
     except Exception as e:
         print('Error uploading file:', str(e))
+
+# def delete_image_at_s3(s3, bucket_name, key):
+#     try:
+#         bucket_name.objects.filter(Prefix=key).delete()
+#     except Exception as e:
+#         print('Error uploading file:', str(e))
         
 def get_size(start_path):
     total_size = 0
     fin = ''
-    for dirpath, dirnames, filenames in os.walk(start_path):
+    for dirpath, _, filenames in os.walk(start_path):
         for f in filenames:            
             fp = os.path.join(dirpath, f)
             total_size += os.path.getsize(fp)

@@ -1,6 +1,7 @@
 from typing import Dict
 import flet as ft
-import os, time, shutil
+import os, time, shutil, boto3
+import pexpect
 from datetime import datetime, timezone, timedelta
 from time import localtime
 from dotenv import load_dotenv
@@ -32,6 +33,13 @@ def main(page: ft.Page):
                 )
         page.snack_bar.open = True
         page.update()
+
+    def chown_dir():
+        command = [f"sudo chown ubuntu {upload_path}", f"sudo chown :ubuntu {upload_path}"]
+        for comm in command:
+            child = pexpect.spawn(comm)
+            child.sendline("")
+            child.expect(pexpect.EOF)
 
     def file_picker_result(e: ft.FilePickerResultEvent):
         upload_button.current.disabled = True if e.files is None else False
@@ -78,6 +86,7 @@ def main(page: ft.Page):
         total_file_size = get_size(upload_path)
         
         log_txt = time_stamp + "\n"
+        s3_file_path = []
         # File Upload 확인 후 Meta 추출 및 datetime에 따른 partition 생성 후 S3 Upload
         for i, file in enumerate(os.listdir(upload_path)):
             exif_data = get_exif(file)
@@ -94,11 +103,14 @@ def main(page: ft.Page):
                 # UnidentifiedDate 경로 하위에 오늘 날짜로 partition 잡혀서 이행
                 s3_key = f"UnidentifiedDate/yyyy={_y}/mm={_m}/dd={_d}/{file}"
             log_txt += (s3_key + "\n")
+            s3_file_path.append(s3_key)
             _path = os.path.join(upload_path, file)
             upload_image_to_s3(_path, bucket_name, s3_key)
         log_txt += "\n"
         with open(log_file, 'a') as file:
             file.write(log_txt)
+        
+        visual_log_txt = log_txt.replace(time_stamp+'\n','').replace('\n', '\n\n')
         
         tot = localtime(time.time()-start)
         time.sleep(1)
@@ -114,13 +126,16 @@ def main(page: ft.Page):
         upload_info_text.value = f"""
         \tUPLOADED FILE COUNT : {total_file_count}\n
         \tUPLOADED FILE SIZE : {total_file_size}\n
-        \tUPLOADED TIME : {tot.tm_min} 분 {tot.tm_sec} 초
+        \tUPLOADED TIME : {tot.tm_min} 분 {tot.tm_sec} 초\n
+        \tUPLOAD PATH\n
+        {visual_log_txt}
         """
         files.current.controls.insert(1, upload_info_text)
         page.update()
         time.sleep(4)
         shutil.rmtree(upload_path)
-        os.makedirs(upload_path)
+        os.mkdir(upload_path)
+        chown_dir()
     
     upload_info_text=ft.Text(f"", size=16, weight=ft.FontWeight.BOLD)
     
@@ -138,6 +153,45 @@ def main(page: ft.Page):
         dlg_modal.open = True
         page.update()
 
+    def close_dlg(e):
+        dlg_modal.open = False
+        page.update()
+        
+    def delete_upload_dir(e):
+        shutil.rmtree(upload_path)
+        os.mkdir(upload_path)
+        chown_dir()
+        snackBar(
+                f"Local Directory has been emptied"
+                , 'GREY'
+                , 16
+                , 3000
+                )
+        
+    def init_page():
+        select_file_btn.disabled = True
+        empty_uploadDir_btn.disabled = True
+        page.controls.remove(upload_file_btn)
+        page.controls.insert(1, passwd_validate_btn)
+        files.current.controls.clear()
+        page.update()
+
+    def check_passwd(e, passwd):
+        if passwd == os.environ.get('PERSONAL_PASSWORD'):
+            dlg_modal.open = False
+            select_file_btn.disabled = False
+            empty_uploadDir_btn.disabled = False
+            snackBar("WELCOME!", 'GREEN', 16, 3000)
+            passwd_field.value = ""
+            page.controls.insert(1, upload_file_btn)
+            page.controls.remove(passwd_validate_btn)
+            page.update()
+        else:
+            snackBar("ENTER VALID PASSWORD", 'RED', 16, 3000)
+            dlg_modal.open = True
+            passwd_field.value = ""
+            page.update()
+
     passwd_validate_btn = ft.FloatingActionButton(
                 content=ft.Row([ft.Icon(ft.icons.LOCK), ft.Text("Validate")], alignment="center", spacing=8),
                 ref=upload_button,
@@ -152,7 +206,7 @@ def main(page: ft.Page):
                 "Select files...",
                 icon=ft.icons.FOLDER_OPEN,
                 on_click=lambda _: file_picker.pick_files(allow_multiple=True),
-                disabled=True
+                disabled=True,
             )
     
     upload_file_btn = ft.FloatingActionButton(
@@ -164,33 +218,16 @@ def main(page: ft.Page):
                 mini=True,
                 on_click=upload_files,
             )
+
+    empty_uploadDir_btn = ft.ElevatedButton(
+                content=ft.Icon(ft.icons.DELETE),
+                bgcolor=ft.colors.GREY_300,
+                disabled=True,
+                on_click=delete_upload_dir
+            )
+
+    upload_btn_row = ft.Row(controls=[select_file_btn, empty_uploadDir_btn],alignment=ft.MainAxisAlignment.SPACE_BETWEEN)
     
-    def init_page():
-        select_file_btn.disabled = True
-        page.controls.remove(upload_file_btn)
-        page.controls.insert(1, passwd_validate_btn)
-        files.current.controls.clear()
-        page.update()
-
-    def close_dlg(e):
-        dlg_modal.open = False
-        page.update()
-
-    def check_passwd(e, passwd):
-        if passwd == os.environ.get('PERSONAL_PASSWORD'):
-            dlg_modal.open = False
-            select_file_btn.disabled = False
-            snackBar("WELCOME!", 'GREEN', 16, 3000)
-            passwd_field.value = ""
-            page.controls.insert(1, upload_file_btn)
-            page.controls.remove(passwd_validate_btn)
-            page.update()
-        else:
-            snackBar("ENTER VALID PASSWORD", 'RED', 16, 3000)
-            dlg_modal.open = True
-            passwd_field.value = ""
-            page.update()
-
     passwd_field = ft.TextField(
         label="password",
         keyboard_type='NUMBER',
@@ -219,7 +256,7 @@ def main(page: ft.Page):
 
     page.add(
         passwd_validate_btn,
-        select_file_btn,
+        upload_btn_row,
         ft.Column(ref=files),
     )
     
